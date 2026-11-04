@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // Chaque personne ne peut lire / écrire que SES données.
+    match /users/{uid}/expenses/{id} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['amount', 'date', 'desc', 'cat'])
+        && request.resource.data.amount is number
+        && request.resource.data.amount >= 0 && request.resource.data.amount < 1000000
+        && request.resource.data.date is string && request.resource.data.date.size() == 10
+        && request.resource.data.desc is string && request.resource.data.desc.size() <= 200
+        && request.resource.data.cat is string && request.resource.data.cat.size() <= 60;
+    }
+
+    match /users/{uid}/meta/settings {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['payDay', 'defaults', 'weeks', 'categories', 'updatedAt'])
+        && request.resource.data.payDay is number
+        && request.resource.data.defaults is list
+        && request.resource.data.weeks is map
+        && request.resource.data.categories is list;
+    }
+
+    // Tout le reste est interdit.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

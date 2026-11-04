@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Budget loisirs hebdo</title>
+<script>
+/* Thème appliqué avant l'affichage pour éviter un flash */
+function seasonOf(d){ var md=(d.getMonth()+1)*100+d.getDate(); return (md>=1221||md<320)?"winter":md<621?"spring":md<922?"summer":"autumn"; }
+function resolveTheme(t){ return t==="auto"?seasonOf(new Date()):(["autumn","winter","spring","summer"].indexOf(t)>=0?t:"autumn"); }
+(function(){ var k="autumn"; try{ var s=JSON.parse(localStorage.getItem("budget-hebdo-v1")); k=resolveTheme(s&&s.theme); }catch(e){} document.documentElement.setAttribute("data-theme",k); })();
+</script>
+</head>
+<body>
+<div id="root"></div>
+<noscript><p style="padding:20px">Cette application a besoin de JavaScript.</p></noscript>
+<script type="module" src="/src/main.tsx"></script>
+</body>
+</html>
