@@ -4,12 +4,14 @@ import { summaryData, weekNumber } from "../lib/budget";
 import { MONTHS, fm, parse, range } from "../lib/dates";
 import { SvgBars } from "../components/Charts";
 import { THEMES } from "../theme";
+import { useNarrow } from "../lib/useMedia";
 
 const Kpi = ({ cls, l, v, s }: { cls: string; l: string; v: ReactNode; s: ReactNode }) => <div className={"kpi " + cls}><div className="l">{l}</div><div className="v">{v}</div><div className="s">{s}</div></div>;
 
 export function SummaryView({ state, year, setYear, setWk, goWeek, themeKey }: {
   state: AppState; year: number; setYear: (y: number) => void; setWk: (wk: string) => void; goWeek: () => void; themeKey: ThemeKey;
 }) {
+  const narrow = useNarrow();
   const wn = (d: Date): number => weekNumber(d, state.payDay).week;
   const yNow = weekNumber(new Date(), state.payDay).year;
   const years = new Set<number>([yNow, year]); state.expenses.forEach(x => years.add(weekNumber(parse(x.date), state.payDay).year));
@@ -18,7 +20,7 @@ export function SummaryView({ state, year, setYear, setWk, goWeek, themeKey }: {
     <div className="weeknav"><div className="ttl"><b>Résumé annuel</b><span>Statistiques sur les semaines suivies jusqu'à aujourd'hui</span></div>
       <label>Année<select value={year} onChange={e => setYear(Number(e.target.value))}>{yl.map(y => <option key={y}>{y}</option>)}</select></label></div>
   );
-  if (!state.defaults.length) return <>{head}<div className="card empty">Définis d'abord un budget hebdomadaire dans l'onglet « Semaine ».</div></>;
+  if (!state.defaults.length) return <>{head}<div className="card empty">Définis d'abord un budget hebdomadaire dans la section « Semaine ».</div></>;
   const { weeks, todayWk } = summaryData(state, year);
   if (!weeks.length) return <>{head}<div className="card empty">Aucune semaine suivie en {year}. {THEMES[themeKey].emoji}</div></>;
 
@@ -55,7 +57,7 @@ export function SummaryView({ state, year, setYear, setWk, goWeek, themeKey }: {
       </div>
 
       <div className="row2">
-        <div className="card"><h2>Dépenses par mois</h2><SvgBars labels={[...MONTHS]} values={mv} colors={mv.map(() => "var(--c1)")} w={440} h={220} valueLabels /></div>
+        <div className="card"><h2>Dépenses par mois</h2><SvgBars labels={[...MONTHS]} values={mv} colors={mv.map(() => "var(--c1)")} w={narrow ? 380 : 440} h={220} valueLabels /></div>
         <div className="card"><h2>Répartition par catégorie</h2>
           {ce.length ? ce.map(([k, v]) => (
             <div className="catbar" key={k}><span>{k}</span><span className="t"><i style={{ width: (spent > 0 ? v / spent * 100 : 0) + "%" }} /></span><span className="a">{fm(v)} · {Math.round(spent > 0 ? v / spent * 100 : 0)} %</span></div>
@@ -65,20 +67,22 @@ export function SummaryView({ state, year, setYear, setWk, goWeek, themeKey }: {
 
       <div className="card"><h2>Budget vs dépensé, semaine par semaine</h2>
         <SvgBars labels={weeks.map(w => "S" + wn(w.start))} values={weeks.map(w => w.spent)} budgets={weeks.map(B)} colors={weeks.map(w => (w.spent > B(w) ? "var(--cbad)" : "var(--c2)"))}
-          w={720} h={230} labelEvery={weeks.length > 26 ? 3 : weeks.length > 14 ? 2 : 1} titles={weeks.map(wlabel)} />
+          w={narrow ? 340 : 720} h={narrow ? 200 : 230} titles={weeks.map(wlabel)}
+          labelEvery={narrow ? Math.max(1, Math.ceil(26 / ((340 - 48) / weeks.length))) : weeks.length > 26 ? 3 : weeks.length > 14 ? 2 : 1} />
         <div className="hint">Barres : dépensé (rouge si dépassé) · tirets rouges : budget de la semaine</div></div>
 
-      <div className="card"><h2>Semaine par semaine</h2><div className="scroll"><table>
+      <div className="card"><h2>Semaine par semaine</h2><div className="scroll weeklist"><table className="wtable">
         <thead><tr><th>Sem.</th><th>Période</th><th className="n">Budget</th><th className="n">Dépensé</th><th className="n">Écart</th><th>Utilisation</th><th>Statut</th><th /></tr></thead>
         <tbody>{weeks.slice().reverse().map(w => {
           const cur = w.wk === todayWk, st = status(w), r = Math.min(100, w.ratio * 100);
           return (
             <tr key={w.wk}>
-              <td><b>S{wn(w.start)}</b></td><td className="cat">{range(w.start, w.end)}</td><td className="n">{fm(w.budget)}</td><td className="n">{fm(w.spent)}</td>
-              <td className="n" style={st === "over" ? { color: "var(--danger)", fontWeight: 700 } : undefined}>{fm(B(w) - w.spent)}</td>
-              <td><span className="mini"><i className={st === "over" ? "over" : ""} style={{ width: r + "%" }} /></span> <span className="hint">{Math.round(w.ratio * 100)} %</span></td>
-              <td><span className={"chip " + (st === "over" ? "over" : cur ? "cur" : "ok")}>{st === "over" ? "Dépassé" : cur ? "En cours" : "Respecté"}</span></td>
-              <td><button className="btn ghost sm" onClick={() => { setWk(w.wk); goWeek(); }}>Voir</button></td>
+              <td className="wkc"><b>S{wn(w.start)}</b></td><td className="cat per">{range(w.start, w.end)}</td>
+              <td className="n bud" data-label="Budget">{fm(w.budget)}</td><td className="n spe" data-label="Dépensé">{fm(w.spent)}</td>
+              <td className="n eca" data-label="Écart" style={st === "over" ? { color: "var(--danger)", fontWeight: 700 } : undefined}>{fm(B(w) - w.spent)}</td>
+              <td className="use"><span className="mini"><i className={st === "over" ? "over" : ""} style={{ width: r + "%" }} /></span> <span className="hint">{Math.round(w.ratio * 100)} %</span></td>
+              <td className="sta"><span className={"chip " + (st === "over" ? "over" : cur ? "cur" : "ok")}>{st === "over" ? "Dépassé" : cur ? "En cours" : "Respecté"}</span></td>
+              <td className="voir"><button className="btn ghost sm" onClick={() => { setWk(w.wk); goWeek(); }}>Voir</button></td>
             </tr>);
         })}</tbody>
       </table></div></div>

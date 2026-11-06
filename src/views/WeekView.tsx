@@ -8,20 +8,21 @@ import { Progress } from "../components/Progress";
 import { CatOptions, parseAmount } from "../components/Dialogs";
 import { useToast } from "../components/Toasts";
 import { THEMES } from "../theme";
+import { useMedia, useNarrow } from "../lib/useMedia";
 import type { ThemeKey } from "../types";
 
 export function ExpTable({ list, onEdit, onDelete }: { list: Expense[]; onEdit: (id: number) => void; onDelete: (id: number) => void }) {
   if (!list.length) return null;
   return (
-    <div className="scroll"><table>
+    <div className="scroll explist"><table className="exp">
       <thead><tr><th>Date</th><th>Description</th><th>Catégorie</th><th className="n">Montant</th><th /></tr></thead>
       <tbody>{list.map(x => (
         <tr key={x.id}>
-          <td>{cap(fWdS.format(parse(x.date)))}</td>
-          <td>{x.desc || <span className="hint">—</span>}</td>
+          <td className="d">{cap(fWdS.format(parse(x.date)))}</td>
+          <td className="desc">{x.desc || <span className="hint">—</span>}</td>
           <td className="cat">{x.cat}</td>
           <td className="n"><b>{fm(x.amount)}</b></td>
-          <td style={{ whiteSpace: "nowrap" }}>
+          <td className="act">
             <button className="icon" title="Modifier" aria-label="Modifier" onClick={() => onEdit(x.id)}>✎</button>
             <button className="icon" title="Supprimer" aria-label="Supprimer" onClick={() => onDelete(x.id)}>🗑</button>
           </td>
@@ -36,7 +37,8 @@ interface Props {
   onEditBudget: () => void; onEditExpense: (id: number) => void; onDeleteExpense: (id: number) => void;
 }
 export function WeekView({ state, wk, setWk, themeKey, draft, setDraft, onEditBudget, onEditExpense, onDeleteExpense }: Props) {
-  const toast = useToast();
+  const toast = useToast(), narrow = useNarrow();
+  const touch = useMedia("(pointer: coarse)");          // pas d'ouverture automatique du clavier sur téléphone
   const st = weekStats(state, wk), wkn = weekNumber(st.start, state.payDay);
   const today = iso(new Date()), endIso = iso(st.end), isCur = today >= wk && today <= endIso;
   const b = st.budget, over = b == null ? 0 : Math.max(0, st.spent - b), rest = b == null ? 0 : Math.max(0, b - st.spent);
@@ -80,13 +82,13 @@ export function WeekView({ state, wk, setWk, themeKey, draft, setDraft, onEditBu
 
   return (
     <>
-      <div className="weeknav">
-        <button className="btn ghost" aria-label="Semaine précédente" onClick={() => setWk(iso(addDays(parse(wk), -7)))}>◀</button>
+      <div className="weeknav wk">
+        <button className="btn ghost nav-prev" aria-label="Semaine précédente" onClick={() => setWk(iso(addDays(parse(wk), -7)))}>◀</button>
         <div className="ttl"><b>Semaine {wkn.week}{isCur ? " · en cours" : ""}</b><span>{DAYS[state.payDay]} {range(st.start, st.end)} {st.start.getFullYear()} · paie le {shortDate(st.start)}</span></div>
-        <input type="date" value={wk} aria-label="Aller à la semaine contenant cette date" title="Aller à une date"
+        <input className="nav-date" type="date" value={wk} aria-label="Aller à la semaine contenant cette date" title="Aller à une date"
           onChange={e => { if (e.target.value) { const d = parse(e.target.value); setWk(iso(addDays(d, -((d.getDay() - state.payDay + 7) % 7)))); } }} />
-        <button className="btn ghost" onClick={() => setWk(iso(addDays(new Date(), -((new Date().getDay() - state.payDay + 7) % 7))))}>Aujourd'hui</button>
-        <button className="btn" onClick={() => setWk(iso(addDays(parse(wk), 7)))}>Semaine suivante ▶</button>
+        <button className="btn ghost nav-today" onClick={() => setWk(iso(addDays(new Date(), -((new Date().getDay() - state.payDay + 7) % 7))))}>Aujourd'hui</button>
+        <button className="btn nav-next" aria-label="Semaine suivante" onClick={() => setWk(iso(addDays(parse(wk), 7)))}><span className="lbl">Semaine suivante </span>▶</button>
       </div>
 
       {!state.defaults.length && (
@@ -108,8 +110,8 @@ export function WeekView({ state, wk, setWk, themeKey, draft, setDraft, onEditBu
         <Progress spent={st.spent} budget={b} /><div className={"msg " + mc}>{msg}</div></div>
 
       <div className="card"><h2>Ajouter une dépense</h2>
-        <form data-form="add" className="addform" onSubmit={add}>
-          <label>Montant ($)<input ref={amountRef} name="amount" type="number" min="0.01" step="0.01" required inputMode="decimal" placeholder="0,00" autoFocus value={amount} onChange={e => setAmount(e.target.value)} /></label>
+        <form data-form="add" className="addform expform" onSubmit={add}>
+          <label>Montant ($)<input ref={amountRef} name="amount" type="number" min="0.01" step="0.01" required inputMode="decimal" placeholder="0,00" autoFocus={!touch} value={amount} onChange={e => setAmount(e.target.value)} /></label>
           <label>Date<input name="date" type="date" required value={date} onChange={e => setDate(e.target.value)} /></label>
           <label className="grow">Description<input name="desc" type="text" maxLength={120} placeholder="ex. Café avec Marc" value={desc} onChange={e => setDesc(e.target.value)} /></label>
           <label>Catégorie<select name="cat" value={cat} onChange={e => setCat(e.target.value)}><CatOptions state={state} selected={cat} /></select></label>
@@ -117,7 +119,7 @@ export function WeekView({ state, wk, setWk, themeKey, draft, setDraft, onEditBu
 
       <div className="row2">
         <div className="card"><h2>Dépenses par jour</h2>
-          <SvgBars labels={labels} values={vals} colors={vals.map(v => (pace != null && v > pace ? "var(--cwarn)" : "var(--c2)"))} budgets={pace != null ? vals.map(() => pace) : null} w={440} h={210} valueLabels /></div>
+          <SvgBars labels={labels} values={vals} colors={vals.map(v => (pace != null && v > pace ? "var(--cwarn)" : "var(--c2)"))} budgets={pace != null ? vals.map(() => pace) : null} w={narrow ? 320 : 440} h={narrow ? 190 : 210} valueLabels /></div>
         <div className="card"><h2>Détail de la semaine</h2>
           {st.list.length ? <ExpTable list={st.list} onEdit={onEditExpense} onDelete={onDeleteExpense} /> : <div className="empty">Aucune dépense pour le moment. {THEMES[themeKey].emoji}</div>}</div>
       </div>

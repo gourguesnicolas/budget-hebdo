@@ -139,7 +139,33 @@ async function main(): Promise<void> {
   cloud.fail = false; local(A, s => ({ ...s, expenses: [...s.expenses] })); A.sync.notifyLocalChange(); await sleep(21500);
   check("reprise automatique après erreur", cloudDescs(cloud, "u1").includes("fail-1") && A.sync.getSnapshot().status === "synced", [cloudDescs(cloud, "u1"), A.sync.getSnapshot().status]);
 
-  /* 13. expData normalise les types */
+  /* 13. thème : « 4 saisons » par défaut, synchronisé entre appareils et repris par un appareil neuf */
+  check("thème par défaut = 4 saisons", freshState().theme === "auto");
+  local(A, s => ({ ...s, theme: "winter" })); await settle(cloud, "u1");
+  check("thème envoyé au cloud", cloud.u("u1").meta?.theme === "winter", cloud.u("u1").meta?.theme);
+  check("thème A→B3", B3.st.theme === "winter", B3.st.theme);
+  const C = device(cloud, "C");
+  await C.sync.init(null, C.be); C.be.signIn({ uid: "u1", email: "a@x.ca" }); await settle(cloud, "u1");
+  check("appareil neuf reprend le thème du compte", C.st.theme === "winter", C.st.theme);
+  local(C, s => ({ ...s, theme: "auto" })); await settle(cloud, "u1");
+  check("retour à 4 saisons propagé", A.st.theme === "auto" && B3.st.theme === "auto", [A.st.theme, B3.st.theme]);
+  check("particules restent propres à l'appareil", !("fx" in (cloud.u("u1").meta ?? {})));
+  A.sync.dispose(); B3.sync.dispose(); C.sync.dispose();
+
+  /* 14. anciens réglages cloud sans thème : le thème local est gardé puis envoyé ; thème invalide ignoré */
+  cloud.u("u3").meta = { payDay: 4, defaults: [{ from: "2026-10-01", amount: 50 }], weeks: {}, categories: ["Autre"] };
+  const D = device(cloud, "D", { ...freshState(), theme: "spring", expenses: [exp(40, "D1")] });
+  await D.sync.init(null, D.be); D.be.signIn({ uid: "u3", email: "c@x.ca" }); await settle(cloud, "u3");
+  check("réglages sans thème : thème local conservé", D.st.theme === "spring" && D.st.defaults[0]?.amount === 50, [D.st.theme, D.st.defaults]);
+  check("réglages sans thème : thème local envoyé", cloud.u("u3").meta?.theme === "spring", cloud.u("u3").meta);
+  D.sync.dispose();
+  cloud.u("u4").meta = { payDay: 4, defaults: [], weeks: {}, categories: ["Autre"], theme: "bogus" as never };
+  const E = device(cloud, "E");
+  await E.sync.init(null, E.be); E.be.signIn({ uid: "u4", email: "d@x.ca" }); await settle(cloud, "u4");
+  check("thème inconnu du cloud ignoré", E.st.theme === "auto", E.st.theme);
+  E.sync.dispose();
+
+  /* 15. expData normalise les types */
   check("expData normalise", JSON.stringify(expData({ amount: "5", date: "2026-01-01" })) === JSON.stringify({ amount: 5, date: "2026-01-01", desc: "", cat: "" }));
 
   console.log(`\n${passes} réussis, ${fails} échoués`);

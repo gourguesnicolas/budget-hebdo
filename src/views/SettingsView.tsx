@@ -18,7 +18,7 @@ export function SettingsView({ state, curWk, onErased }: { state: AppState; curW
   const toast = useToast(), [newCat, setNewCat] = useState("");
   const real = seasonOf(new Date());
   const tile = (k: ThemeChoice, label: string, sub: string, sw: string[], em: string) => (
-    <button key={k} className={"theme-tile" + (state.theme === k ? " on" : "")} aria-pressed={state.theme === k} onClick={() => actions.setTheme(k)}>
+    <button key={k} className={"theme-tile" + (k === "auto" ? " auto" : "") + (state.theme === k ? " on" : "")} aria-pressed={state.theme === k} onClick={() => actions.setTheme(k)}>
       <span className="sw">{sw.map(c => <i key={c} style={{ background: c }} />)}</span><b>{em} {label}</b><span className="hint">{sub}</span>
     </button>
   );
@@ -60,10 +60,10 @@ export function SettingsView({ state, curWk, onErased }: { state: AppState; curW
       <div className="card"><h2>Thème</h2>
         <div className="theme-tiles">
           {(Object.keys(THEMES) as (keyof typeof THEMES)[]).map(k => tile(k, THEMES[k].label, THEMES[k].sub, THEMES[k].sw, THEMES[k].emoji))}
-          {tile("auto", "4 saisons", "Suit la saison en cours · actuellement : " + THEMES[real].label.toLowerCase(), ["#D9641E", "#0A8794", "#D63F7E", "#1F8A5B"], "🔄")}
+          {tile("auto", "4 saisons", "Par défaut · suit la saison en cours · actuellement : " + THEMES[real].label.toLowerCase(), ["#D9641E", "#0A8794", "#D63F7E", "#1F8A5B"], "🔄")}
         </div>
         <label className="chk"><input type="checkbox" checked={state.fx !== false} onChange={e => actions.setFx(e.target.checked)} /> Particules animées sur toute la page (feuilles, neige, pétales, bulles…) qui réagissent doucement au curseur</label>
-        <p className="hint" style={{ marginBottom: 0 }}>« 4 saisons » suit la date de ton ordinateur (hémisphère nord) : printemps dès le 20 mars, été dès le 21 juin, automne dès le 22 septembre, hiver dès le 21 décembre.</p></div>
+        <p className="hint" style={{ marginBottom: 0 }}>Connecté au cloud, ton thème te suit sur tous tes appareils ; les particules se règlent séparément sur chacun. « 4 saisons » suit la date de ton appareil (hémisphère nord) : printemps dès le 20 mars, été dès le 21 juin, automne dès le 22 septembre, hiver dès le 21 décembre.</p></div>
 
       <CloudCard />
 

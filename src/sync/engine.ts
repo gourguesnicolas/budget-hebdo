@@ -5,8 +5,9 @@
  * chaque changement local est envoyé (seulement la différence) et les changements des autres appareils arrivent en direct.
  * Chaque dépense est un document distinct : deux appareils qui ajoutent des dépenses en même temps ne s'écrasent pas.
  */
-import type { AppState, Expense } from "../types";
+import type { AppState, Expense, ThemeChoice } from "../types";
 import { DEFAULT_CATS, freshState } from "../lib/budget";
+import { THEME_CHOICES } from "../lib/dates";
 import { OWNER_KEY, SYNC_KEY, lsDel, lsGet, lsSet } from "../lib/storage";
 import type { Backend, CloudSnapshot, CloudStatus, CloudUser, ExpenseData, ExpensesEvent, MetaData, MetaEvent, Result } from "./types";
 
@@ -27,8 +28,13 @@ export const stable = (v: unknown): string =>
 export const expData = (x: { amount: unknown; date: unknown; desc?: unknown; cat?: unknown }): ExpenseData =>
   ({ amount: Number(x.amount), date: String(x.date), desc: String(x.desc || ""), cat: String(x.cat || "") });
 export const expJson = (x: Expense | ExpenseData): string => stable(expData(x));
-export const metaOf = (s: AppState): MetaData => ({ payDay: s.payDay, defaults: s.defaults, weeks: s.weeks, categories: s.categories });
-const normMeta = (m: Partial<MetaData>): MetaData => ({ payDay: m.payDay as number, defaults: m.defaults || [], weeks: m.weeks || {}, categories: m.categories || [] });
+export const metaOf = (s: AppState): MetaData => ({ payDay: s.payDay, defaults: s.defaults, weeks: s.weeks, categories: s.categories, theme: s.theme });
+/** Réglages lus du cloud. Un thème absent (anciens réglages) ou inconnu est omis : le thème local est alors conservé puis envoyé. */
+const normMeta = (m: Partial<MetaData>): MetaData => {
+  const o: MetaData = { payDay: m.payDay as number, defaults: m.defaults || [], weeks: m.weeks || {}, categories: m.categories || [] };
+  if (THEME_CHOICES.includes(m.theme as ThemeChoice)) o.theme = m.theme;
+  return o;
+};
 const toId = (id: string): number => { const n = Number(id); return Number.isFinite(n) ? n : (id as unknown as number); };
 
 export function isPristine(s: AppState): boolean {
@@ -43,7 +49,8 @@ export function mergeMeta(local: MetaData, cloud: MetaData): MetaData {
   return {
     payDay: typeof cloud.payDay === "number" ? cloud.payDay : local.payDay,
     defaults: [...dm].map(([from, amount]) => ({ from, amount })).sort((a, b) => (a.from < b.from ? -1 : 1)),
-    weeks: { ...local.weeks, ...cloud.weeks }, categories: cats
+    weeks: { ...local.weeks, ...cloud.weeks }, categories: cats,
+    theme: cloud.theme ?? local.theme
   };
 }
 

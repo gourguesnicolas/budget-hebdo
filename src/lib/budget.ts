@@ -4,7 +4,7 @@ import { addDays, iso, parse, payWeek, weekStartOf } from "./dates";
 export const DEFAULT_CATS = ["Restaurant", "Café", "Sorties & bars", "Cinéma & spectacles", "Jeux vidéo", "Sport & plein air", "Magasinage", "Autre"];
 
 export function freshState(): AppState {
-  return { v: 2, payDay: 4, defaults: [], weeks: {}, expenses: [], categories: DEFAULT_CATS.slice(), nextId: 1, lastExport: null, theme: "autumn", fx: true };
+  return { v: 2, payDay: 4, defaults: [], weeks: {}, expenses: [], categories: DEFAULT_CATS.slice(), nextId: 1, lastExport: null, theme: "auto", fx: true };
 }
 
 /** Identifiant unique entre appareils (deux appareils ne risquent pas de créer le même). */

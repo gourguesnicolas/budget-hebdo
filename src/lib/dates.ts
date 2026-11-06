@@ -37,7 +37,8 @@ export function seasonOf(d: Date): ThemeKey {
   const md = (d.getMonth() + 1) * 100 + d.getDate();
   return (md >= 1221 || md < 320) ? "winter" : md < 621 ? "spring" : md < 922 ? "summer" : "autumn";
 }
+export const THEME_CHOICES: readonly ThemeChoice[] = ["auto", "autumn", "winter", "spring", "summer"];
+/** Thème à afficher. « auto » (4 saisons, le défaut) ou une valeur inconnue → la saison réelle. */
 export function resolveTheme(t: ThemeChoice | string | undefined): ThemeKey {
-  if (t === "auto") return seasonOf(new Date());
-  return t === "autumn" || t === "winter" || t === "spring" || t === "summer" ? t : "autumn";
+  return t === "autumn" || t === "winter" || t === "spring" || t === "summer" ? t : seasonOf(new Date());
 }

@@ -21,11 +21,12 @@ service cloud.firestore {
     match /users/{uid}/meta/settings {
       allow read, delete: if isOwner(uid);
       allow create, update: if isOwner(uid)
-        && request.resource.data.keys().hasOnly(['payDay', 'defaults', 'weeks', 'categories', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['payDay', 'defaults', 'weeks', 'categories', 'theme', 'updatedAt'])
         && request.resource.data.payDay is number
         && request.resource.data.defaults is list
         && request.resource.data.weeks is map
-        && request.resource.data.categories is list;
+        && request.resource.data.categories is list
+        && (!('theme' in request.resource.data) || request.resource.data.theme in ['auto', 'autumn', 'winter', 'spring', 'summer']);
     }
 
     // Tout le reste est interdit.

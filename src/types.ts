@@ -13,8 +13,8 @@ export interface AppState {
   categories: string[];
   nextId: number;
   lastExport: string | null;
-  theme: ThemeChoice;             // préférence propre à l'appareil (non synchronisée)
-  fx: boolean;                    // idem
+  theme: ThemeChoice;             // synchronisé avec le compte cloud ; « auto » (4 saisons) par défaut
+  fx: boolean;                    // particules : préférence propre à l'appareil (non synchronisée)
 }
 
 export interface WeekStats {

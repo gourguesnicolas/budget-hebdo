@@ -1,8 +1,9 @@
-import type { DefaultBudget, WeekOverrides } from "../types";
+import type { DefaultBudget, ThemeChoice, WeekOverrides } from "../types";
 
 export interface CloudUser { uid: string; email: string | null }
 export interface ExpenseData { amount: number; date: string; desc: string; cat: string }
-export interface MetaData { payDay: number; defaults: DefaultBudget[]; weeks: WeekOverrides; categories: string[] }
+/** `theme` est facultatif : les réglages enregistrés avant sa synchronisation ne l'ont pas. */
+export interface MetaData { payDay: number; defaults: DefaultBudget[]; weeks: WeekOverrides; categories: string[]; theme?: ThemeChoice }
 
 export interface ExpensesEvent {
   docs: { id: string; data: ExpenseData }[];

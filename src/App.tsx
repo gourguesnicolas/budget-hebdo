@@ -7,7 +7,7 @@ import { THEMES } from "./theme";
 import { ToastProvider, useToast } from "./components/Toasts";
 import { Modal } from "./components/Modal";
 import { ParticlesLayer } from "./components/ParticlesLayer";
-import { CloudChip, LoginDialogContent, useCloud } from "./components/CloudUI";
+import { CloudChip, LoginDialogContent, chipLabel, useCloud } from "./components/CloudUI";
 import { BudgetDialog, ExpenseDialog } from "./components/Dialogs";
 import { WeekView } from "./views/WeekView";
 import { ExpensesView } from "./views/ExpensesView";
@@ -25,12 +25,33 @@ function Shell() {
   const [year, setYear] = useState(() => weekNumber(new Date(), store.getState().payDay).year);
   const [draft, setDraft] = useState({ cat: "", date: "" });
   const [dialog, setDialog] = useState<DialogState>(null);
+  const [menu, setMenu] = useState(false);              // menu hamburger (mobile seulement)
+  const headerRef = useRef<HTMLElement>(null), menuBtn = useRef<HTMLButtonElement>(null);
 
   /* thème : la saison réelle si « 4 saisons » */
   const themeKey = resolveTheme(state.theme);
   useEffect(() => {
     const r = document.documentElement; r.setAttribute("data-theme", themeKey); r.setAttribute("data-fx", state.fx === false ? "off" : "on");
+    /* barre du navigateur mobile aux couleurs de l'en-tête */
+    const tint = (): void => {
+      let m = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+      if (!m) { m = document.createElement("meta"); m.name = "theme-color"; document.head.appendChild(m); }
+      m.content = getComputedStyle(r).getPropertyValue("--head1").trim();
+    };
+    tint(); const dark = matchMedia("(prefers-color-scheme: dark)"); dark.addEventListener("change", tint);
+    return () => dark.removeEventListener("change", tint);
   }, [themeKey, state.fx]);
+
+  /* menu : se ferme en touchant ailleurs ou avec Échap */
+  useEffect(() => {
+    if (!menu) return;
+    const down = (e: PointerEvent): void => { if (!headerRef.current?.contains(e.target as Node)) setMenu(false); };
+    const key = (e: KeyboardEvent): void => { if (e.key === "Escape") { setMenu(false); menuBtn.current?.focus(); } };
+    document.addEventListener("pointerdown", down); document.addEventListener("keydown", key);
+    return () => { document.removeEventListener("pointerdown", down); document.removeEventListener("keydown", key); };
+  }, [menu]);
+  const go = (t: Tab): void => { setTab(t); setMenu(false); window.scrollTo(0, 0); };
+  const chip = chipLabel(cloud);
   useEffect(() => {      // en mode « 4 saisons », re-vérifier la saison au retour sur l'onglet
     if (state.theme !== "auto") return;
     const h = (): void => { if (!document.hidden) { const k = resolveTheme("auto"); document.documentElement.setAttribute("data-theme", k); } };
@@ -56,12 +77,16 @@ function Shell() {
 
   return (
     <>
-      <header className="top"><div className="top-in">
-        <CloudChip onClick={() => { if (cloud.status === "signedout") setDialog({ kind: "login" }); else { setTab("set"); window.scrollTo(0, 0); } }} />
-        <h1><span id="logo">{THEMES[themeKey].emoji}</span> Budget loisirs hebdo</h1>
+      <header ref={headerRef} className={"top" + (menu ? " menu-open" : "")}><div className="top-in">
+        <div className="brand">
+          <h1><span id="logo">{THEMES[themeKey].emoji}</span> Budget loisirs hebdo</h1>
+          <button ref={menuBtn} type="button" className={"menubtn" + (chip?.cls ? " " + chip.cls : "")} aria-controls="nav" aria-expanded={menu}
+            aria-label={menu ? "Fermer le menu" : "Ouvrir le menu"} onClick={() => setMenu(m => !m)}><span /><span /><span /></button>
+        </div>
         <p>Suis tes dépenses semaine après semaine</p>
-        <nav className="tabs" aria-label="Sections">
-          {TABS.map(t => <button key={t.key} className={"tab" + (tab === t.key ? " on" : "")} onClick={() => { setTab(t.key); window.scrollTo(0, 0); }}>{t.label}</button>)}
+        <nav id="nav" className="tabs" aria-label="Sections">
+          <CloudChip onClick={() => { setMenu(false); if (cloud.status === "signedout") setDialog({ kind: "login" }); else go("set"); }} />
+          {TABS.map(t => <button key={t.key} className={"tab" + (tab === t.key ? " on" : "")} aria-current={tab === t.key ? "page" : undefined} onClick={() => go(t.key)}>{t.label}</button>)}
         </nav>
       </div></header>
 
@@ -69,7 +94,7 @@ function Shell() {
         {tab === "week" && <WeekView state={state} wk={wk} setWk={setWk} themeKey={themeKey} draft={draft} setDraft={setDraft}
           onEditBudget={() => setDialog({ kind: "budget" })} onEditExpense={id => setDialog({ kind: "expense", id })} onDeleteExpense={deleteExpense} />}
         {tab === "exp" && <ExpensesView state={state} onEdit={id => setDialog({ kind: "expense", id })} onDelete={deleteExpense} />}
-        {tab === "sum" && <SummaryView state={state} year={year} setYear={setYear} setWk={setWk} goWeek={() => { setTab("week"); window.scrollTo(0, 0); }} themeKey={themeKey} />}
+        {tab === "sum" && <SummaryView state={state} year={year} setYear={setYear} setWk={setWk} goWeek={() => go("week")} themeKey={themeKey} />}
         {tab === "set" && <SettingsView state={state} curWk={curWk} onErased={() => { setWk(curWk); }} />}
       </main>
 

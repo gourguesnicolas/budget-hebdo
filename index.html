@@ -7,8 +7,8 @@
 <script>
 /* Thème appliqué avant l'affichage pour éviter un flash */
 function seasonOf(d){ var md=(d.getMonth()+1)*100+d.getDate(); return (md>=1221||md<320)?"winter":md<621?"spring":md<922?"summer":"autumn"; }
-function resolveTheme(t){ return t==="auto"?seasonOf(new Date()):(["autumn","winter","spring","summer"].indexOf(t)>=0?t:"autumn"); }
-(function(){ var k="autumn"; try{ var s=JSON.parse(localStorage.getItem("budget-hebdo-v1")); k=resolveTheme(s&&s.theme); }catch(e){} document.documentElement.setAttribute("data-theme",k); })();
+function resolveTheme(t){ return ["autumn","winter","spring","summer"].indexOf(t)>=0?t:seasonOf(new Date()); }   /* « 4 saisons » par défaut */
+(function(){ var k=seasonOf(new Date()); try{ var s=JSON.parse(localStorage.getItem("budget-hebdo-v1")); k=resolveTheme(s&&s.theme); }catch(e){} document.documentElement.setAttribute("data-theme",k); })();
 </script>
 </head>
 <body>

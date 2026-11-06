@@ -80,7 +80,8 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Segoe UI",sy
 .cloudchip.show{display:inline-flex}.cloudchip:hover{background:rgba(255,255,255,.24)}
 .cloudchip.warn{background:var(--gold,#F4C542);color:#4E2A14;border-color:transparent}
 .cloudchip.err{background:#B3261E;color:#fff;border-color:transparent}
-@media (max-width:560px){.cloudchip{position:static;margin:0 0 8px}}
+.brand{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.menubtn{display:none}
 .top h1{margin:0;font:700 24px/1.2 Georgia,"Times New Roman",serif;letter-spacing:.2px}
 .top p{margin:2px 0 12px;color:var(--sub);font-size:13px}
 .tabs{display:flex;gap:4px;flex-wrap:wrap}
@@ -147,8 +148,9 @@ label{display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:600;
 .pct{font:700 34px Georgia,serif;margin-right:10px}
 .msg{font-weight:700;margin-top:8px}
 .msg.bad{color:var(--danger)}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:760px){.row2{grid-template-columns:1fr}.pct{font-size:28px}}
+/* minmax(0,…) : une colonne peut rétrécir sous la largeur de son contenu (sinon un tableau élargit toute la page) */
+.row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media(max-width:760px){.row2{grid-template-columns:minmax(0,1fr)}.pct{font-size:28px}}
 table{width:100%;border-collapse:collapse}
 th{background:var(--thbg);color:#FFF8EC;font-size:12px;text-align:left;padding:7px 10px;position:sticky;top:0}
 td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
@@ -194,5 +196,119 @@ dialog form{display:flex;flex-direction:column;gap:12px}
 #particles-js{position:fixed;inset:0;z-index:30;pointer-events:none;overflow:hidden}
 #particles-js canvas{display:block;width:100%;height:100%}
 :root[data-fx="off"] #particles-js{display:none}
+
+/* ================= Téléphone (≤ 640 px) ================= */
+@media (max-width:640px){
+  /* en-tête compact, fixé en haut, avec menu hamburger */
+  .top{position:sticky;top:0;z-index:40;overflow:visible;padding:8px 16px;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+  .top h1{font-size:19px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .top p{display:none}
+  .menubtn{display:block;position:relative;flex:none;width:44px;height:44px;margin-right:-6px;border:0;border-radius:10px;background:transparent;color:var(--headtxt);cursor:pointer}
+  .menubtn:hover{background:rgba(255,255,255,.12)}
+  .menubtn:focus-visible{outline:3px solid var(--gold);outline-offset:0}
+  .menubtn span{display:block;width:22px;height:2px;margin:5px auto;border-radius:2px;background:currentColor;transition:transform .2s,opacity .2s}
+  .menu-open .menubtn span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+  .menu-open .menubtn span:nth-child(2){opacity:0}
+  .menu-open .menubtn span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+  .menubtn.warn::after,.menubtn.err::after{content:"";position:absolute;top:8px;right:7px;width:9px;height:9px;border-radius:50%;background:var(--gold,#F4C542);box-shadow:0 0 0 2px var(--head1)}
+  .menubtn.err::after{background:#E5483B}
+  .tabs{display:none;position:absolute;left:-16px;right:-16px;top:calc(100% + 8px);flex-direction:column;gap:2px;padding:8px 12px 14px;
+    background:linear-gradient(160deg,var(--head1),var(--head2));border-radius:0 0 16px 16px;box-shadow:0 12px 24px rgba(0,0,0,.28)}
+  .menu-open .tabs{display:flex}
+  .tab{text-align:left;font-size:16px;padding:13px 14px;border-radius:10px}
+  .tab.on{background:var(--bg);color:var(--ink)}
+  .cloudchip{position:static}
+  .cloudchip.show{align-self:flex-start;margin:4px 2px 8px;padding:9px 14px;font-size:14px}
+
+  main{padding:14px 16px 72px}
+  .card{padding:14px;border-radius:12px;margin-bottom:12px}
+  h2{font-size:17px}
+  /* pas de zoom automatique d'iOS sur les champs (police < 16 px) */
+  input,select{font-size:16px;min-width:0}
+  .btn{min-height:44px}
+  .btn.sm{min-height:36px}
+  .icon{min-width:40px;min-height:40px;font-size:17px}
+
+  /* navigation de semaine : ◀ titre ▶, puis date + Aujourd'hui */
+  .weeknav.wk{display:grid;grid-template-columns:44px minmax(0,1fr) auto 44px;grid-template-areas:"prev ttl ttl next" "date date today today";gap:8px 10px;align-items:center}
+  .weeknav.wk .nav-prev,.weeknav.wk .nav-next{padding:0}
+  .weeknav.wk .nav-prev{grid-area:prev;min-width:44px}
+  .weeknav.wk .nav-next{grid-area:next;min-width:44px}
+  .weeknav.wk .ttl{grid-area:ttl;min-width:0;text-align:center}
+  .weeknav.wk .ttl b{font-size:17px}
+  .weeknav.wk .ttl span{font-size:12px}
+  .weeknav.wk .nav-date{grid-area:date;width:100%;min-height:44px}
+  .weeknav.wk .nav-today{grid-area:today}
+  .weeknav .lbl{display:none}
+  .weeknav .ttl{min-width:0}
+
+  /* indicateurs : 2 par ligne */
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}
+  .kpi{padding:10px 12px;border-radius:12px;min-width:0}
+  .kpi .l{font-size:10px;letter-spacing:.4px}
+  .kpi .v{font-size:20px;overflow-wrap:anywhere}
+  .kpi .s{font-size:11px}
+
+  /* formulaire d'ajout : montant + date, puis description, catégorie et bouton pleine largeur */
+  .expform{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .expform label:nth-of-type(n+3),.expform .btn{grid-column:1/-1}
+  .expform input,.expform select{width:100%}
+  .addform .grow{min-width:0}
+
+  /* dépenses : une ligne = une petite carte (description + montant, puis date · catégorie) */
+  .explist{max-height:none;overflow:visible}
+  table.exp,table.exp tbody{display:block}
+  table.exp thead{display:none}
+  table.exp tr{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;grid-template-areas:"desc desc amt act" "date cat amt act";column-gap:8px;row-gap:2px;align-items:center;padding:10px 2px;border-bottom:1px solid var(--line)}
+  table.exp tr:last-child{border-bottom:0}
+  table.exp td{padding:0;border:0;background:none !important}
+  table.exp .desc{grid-area:desc;font-weight:600;overflow-wrap:anywhere}
+  table.exp .d{grid-area:date;font-size:12px;color:var(--mid);white-space:nowrap}
+  table.exp .cat{grid-area:cat;font-size:12px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  table.exp .cat:not(:empty)::before{content:"· "}
+  table.exp .n{grid-area:amt;white-space:nowrap}
+  table.exp .act{grid-area:act;display:flex}
+
+  /* résumé semaine par semaine : une carte par semaine */
+  .weeklist{max-height:none;overflow:visible}
+  table.wtable,table.wtable tbody{display:block}
+  table.wtable thead{display:none}
+  table.wtable tr{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px 8px;align-items:center;padding:12px 2px;border-bottom:1px solid var(--line)}
+  table.wtable tr:last-child{border-bottom:0}
+  table.wtable td{padding:0;border:0;background:none !important;text-align:left}
+  table.wtable .wkc{grid-column:1/2;grid-row:1}
+  table.wtable .per{grid-column:2/5;grid-row:1;font-size:12px}
+  table.wtable .sta{grid-column:5/7;grid-row:1;justify-self:end}
+  table.wtable .bud{grid-column:1/3;grid-row:2}
+  table.wtable .spe{grid-column:3/5;grid-row:2}
+  table.wtable .eca{grid-column:5/7;grid-row:2}
+  table.wtable [data-label]::before{content:attr(data-label);display:block;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--mid)}
+  table.wtable .use{grid-column:1/5;grid-row:3;display:flex;align-items:center;gap:8px}
+  table.wtable .use .mini{flex:1;width:auto}
+  table.wtable .voir{grid-column:5/7;grid-row:3;justify-self:end}
+
+  /* répartition par catégorie : nom + montant, barre en dessous */
+  .catbar{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name amt" "bar bar";gap:4px 10px;margin:10px 0}
+  .catbar>span:first-child{grid-area:name;min-width:0;overflow-wrap:anywhere}
+  .catbar .t{grid-area:bar}
+  .catbar .a{grid-area:amt}
+
+  /* filtres des dépenses : recherche pleine largeur, puis année + catégorie */
+  .filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .filters .q{grid-column:1/-1;min-width:0 !important}
+  .filters select{width:100%}
+
+  .theme-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .theme-tile{min-width:0}
+  .theme-tile.auto{grid-column:1/-1}
+
+  dialog{width:calc(100% - 24px);padding:18px}
+  #toast{bottom:calc(16px + env(safe-area-inset-bottom));width:calc(100% - 24px)}
+  .toast-item{width:100%;justify-content:space-between}
+
+  /* particules derrière le contenu : rien ne passe devant le texte sur un petit écran */
+  #particles-js{z-index:0}
+  main{position:relative;z-index:1}
+}
 @media print{#particles-js{display:none}}
 @media (prefers-reduced-motion:reduce){.pfill,.pover{transition:none}#particles-js{display:none}}

@@ -1,12 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { startParticles } from "../particles/engine";
+import { useMedia } from "../lib/useMedia";
 import type { ThemeKey } from "../types";
-
-function useMedia(q: string): boolean {
-  const [v, setV] = useState(() => matchMedia(q).matches);
-  useEffect(() => { const m = matchMedia(q), h = () => setV(m.matches); m.addEventListener("change", h); return () => m.removeEventListener("change", h); }, [q]);
-  return v;
-}
 /** Particules propres à la saison, sur toute la page (le canvas laisse passer les clics). */
 export function ParticlesLayer({ theme, enabled }: { theme: ThemeKey; enabled: boolean }) {
   const host = useRef<HTMLDivElement>(null);

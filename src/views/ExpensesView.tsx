@@ -16,8 +16,8 @@ export function ExpensesView({ state, onEdit, onDelete }: { state: AppState; onE
   return (
     <>
       <div className="card"><h2>Toutes les dépenses</h2>
-        <div className="flex" style={{ marginBottom: 12 }}>
-          <label style={{ flex: 1, minWidth: 180 }}>Recherche<input type="search" value={q} onChange={e => setQ(e.target.value)} placeholder="Description ou catégorie" /></label>
+        <div className="flex filters" style={{ marginBottom: 12 }}>
+          <label className="q" style={{ flex: 1, minWidth: 180 }}>Recherche<input type="search" value={q} onChange={e => setQ(e.target.value)} placeholder="Description ou catégorie" /></label>
           <label>Année<select value={year} onChange={e => setYear(e.target.value)}><option value="">Toutes</option>{years.map(y => <option key={y}>{y}</option>)}</select></label>
           <label>Catégorie<select value={cat} onChange={e => setCat(e.target.value)}><option value="">Toutes</option>{cats.map(c => <option key={c}>{c}</option>)}</select></label>
         </div>
@@ -26,7 +26,7 @@ export function ExpensesView({ state, onEdit, onDelete }: { state: AppState; onE
           {shown.length ? <ExpTable list={shown} onEdit={onEdit} onDelete={onDelete} /> : <div className="empty">Aucune dépense pour le moment.</div>}
         </div>
       </div>
-      <p className="hint">Pour ajouter une dépense, va dans l'onglet « Semaine ».</p>
+      <p className="hint">Pour ajouter une dépense, va dans la section « Semaine ».</p>
     </>
   );
 }
