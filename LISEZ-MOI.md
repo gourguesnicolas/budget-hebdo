@@ -64,7 +64,10 @@ Les données de l'ancien fichier sont dans le navigateur, liées à ce fichier :
 
 - **La configuration Firebase n'est pas secrète** (elle est visible dans le code du site, c'est normal). La protection vient de la **connexion** et des **règles Firestore** : sans être connecté au bon compte, personne ne peut lire ni écrire tes données.
 - **Verrouiller les inscriptions** (recommandé, app personnelle) : une fois ton compte créé, Firebase → Authentication → **Settings → User actions** → décoche **Enable create (sign-up)**. Plus personne ne peut créer de compte.
-- Optionnel : dans Google Cloud Console → **APIs & Services → Credentials**, restreins la clé d'API aux « HTTP referrers » `https://<ton-nom>.github.io/*` et `http://localhost:5173/*`.
+- Optionnel : dans Google Cloud Console → **APIs & Services → Credentials**, restreins la clé d'API aux « HTTP referrers »
+  `https://<ton-nom>.github.io/*`, `http://localhost:5173/*` **et** `https://<id-du-projet>.firebaseapp.com/*`.
+  Ce dernier est indispensable : la fenêtre de connexion Google s'exécute sur ce domaine (sinon : « The requested action is invalid »).
+  N'oublie pas le `/*` final, sinon seule la page d'accueil exacte est acceptée.
 - Utilise un mot de passe unique et solide (ou la connexion Google).
 - Se déconnecter retire les données **de cet appareil** (utile sur un ordinateur partagé) ; elles restent dans ton compte.
 - Quota gratuit Firebase (plan Spark) : très largement suffisant pour un budget personnel.
@@ -73,10 +76,10 @@ Les données de l'ancien fichier sont dans le navigateur, liées à ce fichier :
 ## Comment ça marche
 
 - Les données restent d'abord **dans le navigateur** : l'app marche **hors ligne** et se resynchronise au retour du réseau (Firestore garde aussi un cache hors ligne).
-- Chaque dépense est un document Firestore distinct (`users/{uid}/expenses/{id}`) ; les réglages (jour de paie, budgets, catégories) sont dans `users/{uid}/meta/settings`. Deux appareils qui ajoutent des dépenses en même temps **ne s'écrasent pas**.
+- Chaque dépense est un document Firestore distinct (`users/{uid}/expenses/{id}`) ; les réglages (jour de paie, budgets, catégories, thème) sont dans `users/{uid}/meta/settings`. Deux appareils qui ajoutent des dépenses en même temps **ne s'écrasent pas**.
 - Seul ce qui a changé est envoyé. Les changements des autres appareils arrivent **en direct**.
 - À la première connexion d'un appareil : fusion intelligente (ce qui est nouveau ici est envoyé, ce qui a été supprimé ailleurs n'est pas « ressuscité »).
-- Le thème et les particules sont des préférences **propres à chaque appareil** (non synchronisées).
+- Le thème (« 4 saisons » par défaut) suit ton compte sur tous tes appareils ; les particules sont une préférence **propre à chaque appareil**.
 
 ## Structure
 
